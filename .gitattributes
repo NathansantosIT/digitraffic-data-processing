@@ -1,2 +1,6 @@
 * text=auto
 *.sh text eol=lf
+*.json text eol=lf
+*.json.crc text eol=lf
+*.parquet text eol=lf
+*.parquet.crc text eol=lf
