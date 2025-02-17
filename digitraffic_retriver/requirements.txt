@@ -1,0 +1,4 @@
+confluent_kafka
+requests
+pandas
+tenacity

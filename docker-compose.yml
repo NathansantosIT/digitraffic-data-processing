@@ -1,0 +1,45 @@
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    volumes:
+      - ./data_files:/data:rw
+  digitraffic_retriever:
+    build: ./digitraffic_retriver
+    user: root
+    container_name: digitraffic_retriever
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: digitraffic_live_trains
+    volumes:
+      - ./data_files:/data:rw
+  delta-notebook:
+    build: ./pyspark_handler
+    container_name: delta_notebook
+    depends_on:
+      - digitraffic_retriever
+    ports:
+      - 8888:8888
+      - 4040:4040
+    environment:
+      JUPYTER_PORT: 8888
+      SPARK_UI_PORT: 4040
+      #GRANT_SUDO: yes
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: digitraffic_live_trains
+    volumes:
+      - ./data_files:/data:rw
